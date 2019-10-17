@@ -66,16 +66,23 @@ else:
 
 
 initial_seq = {}
+msg_num = {}
 initial_timestamp = 0
 
 for topic in my_topics:
     initial_seq.update({topic : -1})
+    msg_num.update({topic : 0})
 
 out_bag = rosbag.Bag(output_name, 'w')
 
 for current_bag in input_bags:
     in_bag = rosbag.Bag(current_bag)
+    print "---"
     print "processing: " + current_bag
+    for topic in my_topics:
+        count = in_bag.get_message_count(topic)
+        msg_num[topic]+=count
+        print "\t", count, " \t messages in ",topic
 
     for topic, msg, t in in_bag.read_messages(topics=my_topics):
         current_seq = msg.header.seq
@@ -89,5 +96,10 @@ for current_bag in input_bags:
         if (pattern_string[pattern_offset]=='1'):
             out_bag.write(topic, msg, initial_timestamp + time_scale * (t - initial_timestamp))
     in_bag.close()
+
+print "---------------------------------"
+for topic in my_topics:
+    count = out_bag.get_message_count(topic)
+    print msg_num[topic], " \t total messages in ",topic, " , \t" , count , " was written"
 
 out_bag.close()
