@@ -43,6 +43,7 @@ print "-------------------------------------"
 print "time_scale = ",time_scale
 print "output file = ", output_name
 print "selected pattern = ", pattern_string
+print "    length = ", len(pattern_string), " , number of 1s = ", pattern_string.count('1'), " , ratio = ", len(pattern_string)/pattern_string.count('1')
 if (SINGLE_FILE):
     print "single input file selected = ", input_bags[0]
     if (input_bags[0] == output_name):
