@@ -18,16 +18,21 @@ args = parser.parse_args()
 input_file = args.file
 
 global jump
+global initialized
+
 jump = 1
 jump_mutex = threading.Lock()
 
-sema = threading.Semaphore(0)
+sema = threading.Semaphore(1)
+initialized = False
 
 def interact(msg):
     print("\t\t\t\t\t\t_Subscriber_ Message received with: "+str(msg.data))
     global jump
+    global initialized
     jump_mutex.acquire()
     jump = msg.data
+    initialized = True
     jump_mutex.release()
     sema.release()  # signaling to publish next frame
     return
@@ -73,11 +78,15 @@ for topic, msg, t in in_bag.read_messages(topics=my_topics):
         pass
 
     if (covered[0] and covered[1]): # we have published to both channels, and should wait
-        sema.acquire()
-        jump_mutex.acquire()
-        skip = [jump, jump]
-        jump_mutex.release()
-        print ("Interaction received, will jump by: "+str(skip))
+        if initialized:
+		sema.acquire()
+	        jump_mutex.acquire()
+	        skip = [jump, jump]
+	        jump_mutex.release()
+	        print ("Interaction received, will jump by: "+str(skip))
+	else:
+		print ("Not yet initialized, just sleeping and continueing")
+		time.sleep(0.1)
         covered = [False, False] # reset 
 
 sub.unregister()
