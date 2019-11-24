@@ -44,9 +44,6 @@ def interact(msg):
 def start_trigger(data):
     global start_sema
     print("Start trigger received!")
-    print("Data:")
-    print(data)
-    print("Releasing sema")
     start_sema.release()
     return
 
