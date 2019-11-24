@@ -3,8 +3,7 @@ import argparse
 import rosbag
 import os
 
-my_topics = ["/cv_camera/image_raw",
-            "/camera/rgb/image_raw",
+my_topics = ["/camera/rgb/image_raw",
             "/camera/depth/image_raw"]
 
 parser = argparse.ArgumentParser(description="Modify a bagfile to desired time scale, and frame pattern. For now the topics are hardcoded.")
