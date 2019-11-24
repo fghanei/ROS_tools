@@ -6,6 +6,7 @@ import time
 import rospy
 import sensor_msgs.msg
 import std_msgs.msg
+import std_srvs.srv
 import threading
 
 my_topics = ["/camera/rgb/image_raw",
@@ -23,13 +24,16 @@ global initialized
 jump = 1
 jump_mutex = threading.Lock()
 
-sema = threading.Semaphore(1)
+sema = threading.Semaphore(0)
 initialized = False
+
+start_sema = threading.Semaphore(0) #if set to 1, does not wait for client call
 
 def interact(msg):
     print("\t\t\t\t\t\t_Subscriber_ Message received with: "+str(msg.data))
-    global jump
-    global initialized
+    global jump     #needs to global to populate correctly
+    global initialized #needs to global to populate correctly
+
     jump_mutex.acquire()
     jump = msg.data
     initialized = True
@@ -37,14 +41,29 @@ def interact(msg):
     sema.release()  # signaling to publish next frame
     return
 
+def start_trigger(data):
+    global start_sema
+    print("Start trigger received!")
+    print("Data:")
+    print(data)
+    print("Releasing sema")
+    start_sema.release()
+    return
+
 rospy.init_node('interactive_player')
 pub = [] #list of publishing topics rgb, and depth
+print("Advertising publish topics...")
 pub.append(rospy.Publisher('/camera/rgb/image_raw', sensor_msgs.msg.Image, queue_size=1))
 pub.append(rospy.Publisher('/camera/depth/image_raw', sensor_msgs.msg.Image, queue_size=1))
+print("Subscribing to /interactive_player/next topic to listen...")
 sub = rospy.Subscriber("/interactive_player/next", std_msgs.msg.Int32, interact, queue_size=10)
+print("Advertising /interactive_player/start trigger service...")
+serv = rospy.Service("/interactive_player/start", std_srvs.srv.Empty, start_trigger)
 
 in_bag = rosbag.Bag(input_file)
 print("------")
+print ("Waiting for the trigger service call...")
+start_sema.acquire()
 print("processing: " + input_file)
 
 skip = [1, 1]  # number of frames to skip, first it's 1, then it'll interact
